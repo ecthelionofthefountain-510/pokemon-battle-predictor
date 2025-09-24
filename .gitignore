@@ -1,0 +1,8 @@
+# virtuella miljöer och cache
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# datafiler
+*.pkl
