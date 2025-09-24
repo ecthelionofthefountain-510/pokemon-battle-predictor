@@ -3,6 +3,8 @@ import pandas as pd
 import numpy as np
 import joblib
 
+from pathlib import Path
+
 # =========================
 # CSS för UI
 # =========================
@@ -22,9 +24,12 @@ st.markdown(
 # =========================
 # Konstanter
 # =========================
-POKEMON_CSV = "/Users/user/mai24ma/AI_theory/kunskapskontroll/grupp/dataset/pokemon.csv"
-RF_MODEL_PKL = "/Users/user/mai24ma/AI_theory/kunskapskontroll/grupp/pokemon_battle_rf.pkl"
-FEATURE_COLS_PKL = "/Users/user/mai24ma/AI_theory/kunskapskontroll/grupp/feature_columns.pkl"
+
+BASE = Path(__file__).resolve().parent
+
+POKEMON_CSV = BASE / "dataset" / "pokemon.csv"
+RF_MODEL_PKL = BASE / "pokemon_battle_rf.pkl"       # se modellhantering nedan
+FEATURE_COLS_PKL = BASE / "feature_columns.pkl"
 
 NAME_IMG_URL = "https://img.pokemondb.net/artwork/large/{slug}.jpg"
 
