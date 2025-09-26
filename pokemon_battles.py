@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import joblib
+import requests
+import os
 
 from pathlib import Path
 
@@ -73,8 +75,29 @@ def load_pokemon():
 
 @st.cache_resource
 def load_model():
-    model = joblib.load(RF_MODEL_PKL)
-    feat_cols = joblib.load(FEATURE_COLS_PKL)
+    
+    if RF_MODEL_PKL.exists() and FEATURE_COLS_PKL.exists():
+        model = joblib.load(RF_MODEL_PKL)
+        feat_cols = joblib.load(FEATURE_COLS_PKL)
+        return model, feat_cols
+    
+    # Laddar in pkl-filerna från Google Drive
+    MODEL_FILE_ID = "1uOBsEiWgJdRAc2KKK5DnBoFTLLT26HfB"
+    FEATURES_FILE_ID = "1tiX20za2GnXhG-jjcZ8LP1gjCkA2-92T"
+    
+    # Ladda ned från Google Drive
+    for file_id, filename in [(MODEL_FILE_ID, "temp_model.pkl"), (FEATURES_FILE_ID, "temp_features.pkl")]:
+        if not os.path.exists(filename):
+            st.info(f"Laddar {filename}...")
+            url = f"https://drive.google.com/uc?export=download&id={file_id}"
+            response = requests.get(url)
+            with open(filename, 'wb') as f:
+                f.write(response.content)
+    
+    # Ladda modellerna
+    model = joblib.load("temp_model.pkl")
+    feat_cols = joblib.load("temp_features.pkl")
+    
     return model, feat_cols
 
 def slugify_pokemon_name(name: str) -> str:
