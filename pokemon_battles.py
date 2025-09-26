@@ -18,7 +18,7 @@ st.markdown(
     .poke-img-box img { max-height:240px; max-width:100%; object-fit:contain; }
     .badges { display:flex; gap:8px; margin-top:6px; margin-bottom:14px; }
     .badge { padding:6px 10px; border-radius:8px; color:#ffffff; font-weight:600; }
-    </style>a
+    </style>
     """,
     unsafe_allow_html=True
 )
