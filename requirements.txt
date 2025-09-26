@@ -19,3 +19,5 @@ ipykernel
 
 # Extra för EDA
 missingno          # visualisering av missing values
+
+gdown  # för att ladda ner filer från Google Drive

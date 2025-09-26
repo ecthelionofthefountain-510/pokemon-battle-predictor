@@ -75,29 +75,66 @@ def load_pokemon():
 
 @st.cache_resource
 def load_model():
-    
+    import io, sys
+    import joblib
+
+    def is_pickle_file(path: str) -> bool:
+        try:
+            with open(path, "rb") as f:
+                head = f.read(2)
+            # Pickle protokoll börjar normalt med 0x80 0x05 (eller 0x80 0x04 osv)
+            return len(head) == 2 and head[0] == 0x80
+        except Exception:
+            return False
+
+    # 1) Lokala filer (bäst i produktion)
     if RF_MODEL_PKL.exists() and FEATURE_COLS_PKL.exists():
-        model = joblib.load(RF_MODEL_PKL)
-        feat_cols = joblib.load(FEATURE_COLS_PKL)
-        return model, feat_cols
-    
-    # Laddar in pkl-filerna från Google Drive
+        try:
+            model = joblib.load(RF_MODEL_PKL)
+            feat_cols = joblib.load(FEATURE_COLS_PKL)
+            return model, feat_cols
+        except Exception as e:
+            st.warning(f"Kunde inte läsa lokala modeller: {e}")
+
+    # 2) Hämta från Google Drive med gdown
+    try:
+        import gdown
+    except ImportError:
+        st.error("Paketet 'gdown' saknas. Lägg till 'gdown' i requirements.txt och deploya igen.")
+        st.stop()
+
     MODEL_FILE_ID = "1uOBsEiWgJdRAc2KKK5DnBoFTLLT26HfB"
     FEATURES_FILE_ID = "1tiX20za2GnXhG-jjcZ8LP1gjCkA2-92T"
-    
-    # Ladda ned från Google Drive
-    for file_id, filename in [(MODEL_FILE_ID, "temp_model.pkl"), (FEATURES_FILE_ID, "temp_features.pkl")]:
-        if not os.path.exists(filename):
-            st.info(f"Laddar {filename}...")
-            url = f"https://drive.google.com/uc?export=download&id={file_id}"
-            response = requests.get(url)
-            with open(filename, 'wb') as f:
-                f.write(response.content)
-    
-    # Ladda modellerna
-    model = joblib.load("temp_model.pkl")
-    feat_cols = joblib.load("temp_features.pkl")
-    
+
+    model_path = "temp_model.pkl"
+    feats_path = "temp_features.pkl"
+
+    # Ladda bara om fil saknas/trasig
+    if not (os.path.exists(model_path) and is_pickle_file(model_path)):
+        url = f"https://drive.google.com/uc?id={MODEL_FILE_ID}"
+        st.info("Hämtar modell från Google Drive...")
+        gdown.download(url, model_path, quiet=False)
+
+    if not (os.path.exists(feats_path) and is_pickle_file(feats_path)):
+        url = f"https://drive.google.com/uc?id={FEATURES_FILE_ID}"
+        st.info("Hämtar feature-lista från Google Drive...")
+        gdown.download(url, feats_path, quiet=False)
+
+    # Validera igen
+    if not is_pickle_file(model_path) or not is_pickle_file(feats_path):
+        st.error(
+            "Nedladdade filer verkar inte vara giltiga pickle-filer. "
+            "Kontrollera att Google Drive-länkarna pekar på råfiler (inte en förhandsvisningssida)."
+        )
+        st.stop()
+
+    try:
+        model = joblib.load(model_path)
+        feat_cols = joblib.load(feats_path)
+    except Exception as e:
+        st.error(f"Kunde inte ladda pickle: {e}")
+        st.stop()
+
     return model, feat_cols
 
 def slugify_pokemon_name(name: str) -> str:
