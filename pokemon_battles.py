@@ -16,7 +16,7 @@ st.markdown(
     .poke-img-box img { max-height:240px; max-width:100%; object-fit:contain; }
     .badges { display:flex; gap:8px; margin-top:6px; margin-bottom:14px; }
     .badge { padding:6px 10px; border-radius:8px; color:#ffffff; font-weight:600; }
-    </style>
+    </style>a
     """,
     unsafe_allow_html=True
 )
@@ -40,11 +40,9 @@ NAME_IMG_URL = "https://img.pokemondb.net/artwork/large/{slug}.jpg"
 def load_pokemon():
     df = pd.read_csv(POKEMON_CSV)
 
-    # --- Fixa saknade/tomma namn ---
     df["Name"] = df["Name"].astype(str)
     df.loc[df["Name"].str.strip().isin(["", "nan", "NaN"]), "Name"] = np.nan
 
-    # Fyll på manuellt kända saknade namn
     missing_names = {63: "Primeape"}
     df["Name"] = df.apply(lambda r: missing_names.get(r["#"], r["Name"]), axis=1)
 
@@ -62,7 +60,6 @@ def load_pokemon():
     # Gör om # till pokemon_id
     df = df.rename(columns={"#": "pokemon_id"})
 
-    # Normalisera typer
     for col in ["Type 1", "Type 2"]:
         df[col] = (
             df[col].astype(str).str.strip()
@@ -80,7 +77,6 @@ def load_model():
     feat_cols = joblib.load(FEATURE_COLS_PKL)
     return model, feat_cols
 
-# Slugifiera namn till pokemondb-format
 def slugify_pokemon_name(name: str) -> str:
     s = name.strip().lower()
     s = s.replace("♀", "-f").replace("♂", "-m")
@@ -129,7 +125,6 @@ type_selection = st.sidebar.multiselect("Filtrera på typ(er)", all_types, defau
 # Sök
 name_query = st.sidebar.text_input("Sök namn", value="")
 
-# Bygg filtrerad lista av namn
 names_df = pokemon_min[["pokemon_id", "Name", "Type 1", "Type 2", "Generation"]].copy()
 if gen_option != "Alla":
     names_df = names_df[names_df["Generation"].astype(int) == int(gen_option)]
